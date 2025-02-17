@@ -1,0 +1,5 @@
+Flask==2.2.2
+python-pptx
+Pillow
+Werkzeug==2.2.2
+pdf2image==1.16.3

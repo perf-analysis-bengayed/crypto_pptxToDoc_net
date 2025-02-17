@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  doc2:
+    container_name: doc2
+    build: .
+    ports:
+      - "192.168.100.110:5001:5000"  # Expose port 5000 on the specific IP address
+    volumes:
+      - ./input:/input
+      - ./output:/output
+    networks:
+      - mynetwork
+networks:
+  mynetwork:
+    driver: bridge
