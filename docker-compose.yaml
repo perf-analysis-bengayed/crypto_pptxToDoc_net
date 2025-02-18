@@ -5,7 +5,7 @@ services:
     container_name: doc2
     build: .
     ports:
-      - "192.168.100.110:5001:5000"  # Expose port 5000 on the specific IP address
+      - "127.0.0.1:5001:5000"  # Expose port 5000 on the specific IP address
     volumes:
       - ./input:/input
       - ./output:/output

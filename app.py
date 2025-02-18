@@ -3,7 +3,8 @@ import sys
 import subprocess
 import base64
 from pdf2image import convert_from_path
-from flask import Flask,Response,request, jsonify, send_file
+from flask import Flask,Response,request, jsonify, send_file,render_template,send_from_directory
+render_template
 from flask_cors import CORS
 
 
@@ -11,11 +12,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app) 
 
-def stream_file(file_path):
-    """Generator function to stream a file."""
-    with open(file_path, 'rb') as f:
-        while chunk := f.read(8192):  # Read 8KB at a time
-            yield chunk
+
 def pptx_to_pdf(input_file, output_dir):
     command = ['libreoffice', '--headless', '--convert-to', 'pdf', input_file, '--outdir', output_dir]
     subprocess.run(command, check=True, capture_output=True, text=True)
@@ -79,86 +76,60 @@ def upload_pptx():
         return jsonify({"error": str(e)}), 500
     
 
-# def encode_image_to_base64(image_path):
-#     """Encode an image to base64."""
-#     with open(image_path, "rb") as image_file:
-#         encoded_string = base64.b64encode(image_file.read()).decode("utf-8")
-#     return encoded_string  
 
-# # Flask route to return the list of image files as base64
-# @app.route('/imas', methods=['GET'])
-# def get_images():
-#     output_folder = "/output"
-#     if not os.path.isdir(output_folder):
-#         return jsonify({"error": "Le dossier de sortie n'existe pas."}), 400
 
-#     # List all files in the output folder
-#     image_base64_list = []
-#     for root, dirs, files in os.walk(output_folder):
-#         for file in files:
-#             if file.endswith('.png'):  # Only include PNG images
-#                 image_path = os.path.join(root, file)
-#                 # Convert image to base64 and add to the list
-#                 encoded_image = encode_image_to_base64(image_path)
-#                 image_base64_list.append(encoded_image)
+# IMAGE_FOLDER = "/output/slides"  
 
-#     if not image_base64_list:
-#         return jsonify({"message": "Aucune image trouvée."}), 404
+def encode_image_to_base64(image_path):
+    """Encodes an image to base64."""
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode("utf-8")
+
+# @app.route('/liste', methods=['GET'])
+# def f():
+#     """Displays all available images in the folder as base64 encoded."""
+#     if not os.path.exists(IMAGE_FOLDER):
+#         return jsonify({"error": f"Le dossier {IMAGE_FOLDER} n'existe pas."}), 500
+
+#     images = []
+#     for filename in os.listdir(IMAGE_FOLDER):
+#         if filename.endswith((".png", ".jpg", ".jpeg", ".gif")):
+#             image_path = os.path.join(IMAGE_FOLDER, filename)
+#             try:
+#                 image_base64 = encode_image_to_base64(image_path)
+#                 images.append(f"data:image/{filename.split('.')[-1]};base64,{image_base64}")
+#             except Exception as e:
+#                 return jsonify({"error": f"Erreur lors de l'encodage de l'image {filename}: {str(e)}"}), 500
     
-#     return jsonify({"images": image_base64_list}), 200
+#     return jsonify({"images": images}), 200
 
-@app.route('/images', methods=['GET'])
-def get_all_images():
-    output_folder = "/output/9737"
-    
-    images = [f for f in os.listdir(output_folder) if f.endswith('.png')]
+
+@app.route('/liste-images', methods=['GET'])
+def list_images():
+    """Affiche toutes les images disponibles dans un dossier donné sous forme encodée en base64."""
+    folder_param = request.args.get('folder')  # Par exemple : /liste?folder=/output/9737
+    if not folder_param:
+        return jsonify({"error": "Le paramètre 'folder' est requis."}), 400
+
+    if not os.path.exists(folder_param):
+        return jsonify({"error": f"Le dossier {folder_param} n'existe pas."}), 500
+
+    images = []
+    for filename in os.listdir(folder_param):
+        if filename.endswith((".png", ".jpg", ".jpeg", ".gif")):
+            image_path = os.path.join(folder_param, filename)
+            try:
+                image_base64 = encode_image_to_base64(image_path)
+                images.append(f"data:image/{filename.split('.')[-1]};base64,{image_base64}")
+            except Exception as e:
+                return jsonify({"error": f"Erreur lors de l'encodage de l'image {filename}: {str(e)}"}), 500
     
     if not images:
-        return jsonify({"error": "Aucune image trouvée."}), 404
+        return jsonify({"message": "Aucune image trouvée."}), 404
     
-    # Retourner la première image de la liste
-    image_path = os.path.join(output_folder, images[0])
-    
-    return send_file(image_path, mimetype='image/png')
+    return jsonify({"images": images}), 200
 
-# @app.route('/images', methods=['GET'])
-# def get_all_images():
-#     output_folder = "/output"
-    
-#     # Get all images in the output folder
-#     images = [f for f in os.listdir(output_folder) if f.endswith('.png')]
-    
-#     if not images:
-#         return jsonify({"error": "Aucune image trouvée."}), 404
-    
-#     # Generate URLs for the images
-#     image_urls = [f"/images/{image}" for image in images]
-    
-    # return jsonify({"images": image_urls}), 200
-@app.route('/stream_images', methods=['GET'])
-def stream_images():
-    output_folder = "/output/slides"
-    
-    # Get all images in the output folder
-    images = [f for f in os.listdir(output_folder) if f.endswith('.png')]
-    
-    if not images:
-        return jsonify({"error": "Aucune image trouvée."}), 404
-    
-    def generate():
-        for image in images:
-            image_path = os.path.join(output_folder, image)
-            if os.path.exists(image_path):
-                # Streaming each file one by one with appropriate headers
-                yield f'--file-boundary\r\n'
-                yield f'Content-Type: image/png\r\n'
-                yield f'Content-Disposition: inline; filename="{image}"\r\n'
-                yield f'Content-Length: {os.path.getsize(image_path)}\r\n\r\n'
-                yield from stream_file(image_path)
-                yield '\r\n'  # End of file stream
-        
-        yield '--file-boundary--\r\n'  # End of the multi-file stream
 
-    return Response(generate(), content_type='multipart/mixed; boundary=file-boundary')
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
