@@ -1,47 +1,38 @@
-# Use lightweight Python Alpine image
-FROM python:3.10-alpine
+# Use the official .NET SDK image for building the application
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 
-# Install system dependencies
-RUN apk add --no-cache \
+# Set the working directory
+WORKDIR /src
+
+# Copy the project file and restore dependencies
+COPY ./pptx2doc/pptx2doc.csproj ./pptx2doc/
+RUN dotnet restore "./pptx2doc/pptx2doc.csproj"
+
+# Copy the remaining application files
+COPY ./pptx2doc ./pptx2doc/
+
+# Build the application
+RUN dotnet publish "./pptx2doc/pptx2doc.csproj" -c Release -o /app/publish
+
+# Use the official ASP.NET runtime image for running the application
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+
+# Install dependencies (LibreOffice & Poppler-utils for PDF conversion)
+RUN apt-get update && apt-get install -y \
     libreoffice \
-    libreoffice-impress \
     poppler-utils \
-    fontconfig \
-    ttf-dejavu \
-    ttf-liberation \
-    bash \
-    && rm -rf /var/cache/apk/*
+    && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
-COPY requirements.txt /app/requirements.txt
 WORKDIR /app
-RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# Copy the script and fonts (if any)
-COPY app.py . 
-COPY /fonts /usr/share/fonts
+# Copy the published application from the build stage
+COPY --from=build /app/publish .
 
-# Refresh font cache
-RUN fc-cache -f -v
+# Create necessary directories for input and output
+RUN mkdir -p /app/input /app/output
 
-# Create necessary directories
-RUN mkdir -p /app/pptx_files /app/output
+# Expose the port the app runs on
+EXPOSE 3000
 
-# Define mountable volumes
-VOLUME ["/app/pptx_files", "/app/output", "/app/riso_files"]
-
-# Default command to run the script
-CMD ["sh", "-c", "python app.py; tail -f /dev/null"]
-
-
-
-
-
-
-
-
-
-
-
-
-    
+# Set the entry point to run the application
+ENTRYPOINT ["dotnet", "pptx2doc.dll"]

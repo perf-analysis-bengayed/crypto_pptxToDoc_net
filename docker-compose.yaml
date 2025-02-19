@@ -2,13 +2,13 @@ version: '3.8'
 
 services:
   doc2:
-    container_name: doc2
+    container_name: doc1
     build: .
     ports:
-      - "127.0.0.1:5001:5000"  # Expose port 5000 on the specific IP address
+      - "127.0.0.1:3001:3000"  # Expose port 5000 on the specific IP address
     volumes:
-      - ./input:/input
-      - ./output:/output
+      - ./input:/pptx2doc/input
+      - ./output:/pptx2doc/output
     networks:
       - mynetwork
 networks:
