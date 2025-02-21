@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("pptx2doc")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ae683b345f7b5ba79e38e1982820a3b796bd4bd7")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5c954e04996d2d2ec097a8795fa016e2eef465ca")]
 [assembly: System.Reflection.AssemblyProductAttribute("pptx2doc")]
 [assembly: System.Reflection.AssemblyTitleAttribute("pptx2doc")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

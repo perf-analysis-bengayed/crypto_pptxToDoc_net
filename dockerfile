@@ -12,7 +12,7 @@ RUN dotnet restore "./pptx2doc/pptx2doc.csproj"
 COPY ./pptx2doc ./pptx2doc/
 
 # Build the application
-RUN dotnet publish "./pptx2doc/pptx2doc.csproj" -c Release -o /app/publish
+RUN dotnet publish "./pptx2doc/pptx2doc.csproj" -o /app/publish
 
 # Use the official ASP.NET runtime image for running the application
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime

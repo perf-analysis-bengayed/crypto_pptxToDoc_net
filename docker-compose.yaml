@@ -6,9 +6,6 @@ services:
     build: .
     ports:
       - "127.0.0.1:3001:3000"  # Expose port 5000 on the specific IP address
-    volumes:
-      - ./input:/pptx2doc/input
-      - ./output:/pptx2doc/output
     networks:
       - mynetwork
 networks:
