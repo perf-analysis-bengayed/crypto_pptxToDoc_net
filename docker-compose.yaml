@@ -4,10 +4,13 @@ services:
   doc2:
     container_name: doc1
     build: .
-    ports:
-      - "127.0.0.1:3001:3000"  # Expose port 5000 on the specific IP address
+    ports: 
+      - "192.168.100.250:443:443" 
     networks:
       - mynetwork
+
 networks:
   mynetwork:
     driver: bridge
+
+
